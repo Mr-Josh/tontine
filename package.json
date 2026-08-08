@@ -1,0 +1,23 @@
+{
+  "name": "tontine",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tontine is a digital platform for managing recurring contributions, meetings, members, payments and reports for groups and associations.",
+  "packageManager": "pnpm@10.17.1",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "turbo": "^2.10.8"
+  }
+}
