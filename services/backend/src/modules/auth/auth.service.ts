@@ -10,6 +10,9 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    return this.usersService.create(registerDto);
+    const user = await this.usersService.create(registerDto);
+    const { passwordHash: _, ...safeUser } = user;
+
+    return safeUser;
   }
 }
