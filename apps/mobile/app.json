@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "Tontine",
+    "slug": "tontine",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "tontine",
+    "userInterfaceStyle": "automatic",
+    "plugins": ["expo-router"]
+  }
+}
