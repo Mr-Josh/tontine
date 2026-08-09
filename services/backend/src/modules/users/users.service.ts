@@ -2,6 +2,9 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { QueryFailedError, Repository } from 'typeorm';
+import { UserResponseDto } from './dto/user-response.dto';
+import { PaginatedResponse } from '../../common/pagination/pagination.types';
+import { UsersQueryDto } from './dto/users-query.dto';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
@@ -75,9 +78,96 @@ export class UsersService {
     });
   }
 
+  private toResponse(user: User): UserResponseDto {
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phone: user.phone,
+      avatarUrl: user.avatarUrl,
+      status: user.status,
+      emailVerifiedAt: user.emailVerifiedAt,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
+
+  async findById(id: string): Promise<UserResponseDto | null> {
+    const user = await this.usersRepository.findOne({
+      where: { id },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    return this.toResponse(user);
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findOne({
       where: { email },
     });
   }
+
+  async findAll(
+    query: UsersQueryDto,
+  ): Promise<PaginatedResponse<UserResponseDto>> {
+    const queryBuilder = this.usersRepository
+      .createQueryBuilder('user')
+      .select([
+        'user.id',
+        'user.email',
+        'user.firstName',
+        'user.lastName',
+        'user.phone',
+        'user.avatarUrl',
+        'user.status',
+        'user.emailVerifiedAt',
+        'user.createdAt',
+        'user.updatedAt',
+      ]);
+
+    if (query.search) {
+      queryBuilder.andWhere(
+        `(
+        user.email ILIKE :search
+        OR user.firstName ILIKE :search
+        OR user.lastName ILIKE :search
+      )`,
+        {
+          search: `%${query.search}%`,
+        },
+      );
+    }
+
+    if (query.status) {
+      queryBuilder.andWhere('user.status = :status', {
+        status: query.status,
+      });
+    }
+
+    queryBuilder
+      .orderBy('user.createdAt', 'DESC')
+      .skip(query.skip)
+      .take(query.limit);
+
+    const [users, total] = await queryBuilder.getManyAndCount();
+
+    const totalPages = Math.ceil(total / query.limit);
+
+    return {
+      data: users.map((user) => this.toResponse(user)),
+      meta: {
+        page: query.page,
+        limit: query.limit,
+        total,
+        totalPages,
+        hasNextPage: query.page < totalPages,
+        hasPreviousPage: query.page > 1,
+      },
+    };
+  }
+
 }
